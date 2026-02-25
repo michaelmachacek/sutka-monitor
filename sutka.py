@@ -4,12 +4,16 @@ matplotlib.use("Agg")
 import requests
 import re
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 import matplotlib.pyplot as plt
 import csv
 import os
 
 URL = "https://www.sutka.eu/"
 DATA_FILE = "data.csv"
+
+# česká časová zóna
+CZ = ZoneInfo("Europe/Prague")
 
 # === 1) Stáhnout aktuální data ===
 
@@ -27,7 +31,8 @@ if pattern:
     pool = pattern.group(2)
     aquapark = pattern.group(3)
 
-    timestamp = datetime.utcnow().isoformat()
+    # český čas
+    timestamp = datetime.now(CZ).isoformat()
     line = f"{timestamp},{percent},{pool},{aquapark}\n"
 
     with open(DATA_FILE, "a", encoding="utf-8") as f:
@@ -44,7 +49,7 @@ percents = []
 pools = []
 aquaparks = []
 
-now = datetime.utcnow()
+now = datetime.now(CZ)
 limit = now - timedelta(hours=24)
 
 if os.path.exists(DATA_FILE):
@@ -76,7 +81,7 @@ if len(percents) > 0:
     # levá osa = počty lidí
     ax1.plot(timestamps, pools, label="Bazén (počet)")
     ax1.plot(timestamps, aquaparks, label="Aquapark (počet)")
-    ax1.set_xlabel("Čas (UTC)")
+    ax1.set_xlabel("Čas (ČR)")
     ax1.set_ylabel("Počet lidí")
 
     # pravá osa = procenta
@@ -84,12 +89,12 @@ if len(percents) > 0:
     ax2.plot(timestamps, percents, linestyle="--", label="Obsazenost (%)")
     ax2.set_ylabel("Obsazenost (%)")
 
-    # legenda (sloučí obě osy)
+    # spojení legend
     lines1, labels1 = ax1.get_legend_handles_labels()
     lines2, labels2 = ax2.get_legend_handles_labels()
     ax1.legend(lines1 + lines2, labels1 + labels2, loc="upper left")
 
-    plt.title("Obsazenost Šutka – posledních 24h")
+    plt.title("Obsazenost Šutka – posledních 24 hodin")
     plt.xticks(rotation=45)
     plt.tight_layout()
 
