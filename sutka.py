@@ -3,14 +3,13 @@ matplotlib.use("Agg")
 
 import requests
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 import csv
 import os
 
 URL = "https://www.sutka.eu/"
 DATA_FILE = "data.csv"
-GRAPH_FILE = "graf.png"
 
 # === 1) Stáhnout aktuální data ===
 
@@ -38,12 +37,15 @@ if pattern:
 else:
     print("Obsazenost nenalezena")
 
-# === 2) Načíst historická data ===
+# === 2) Načíst historická data (posledních 24h) ===
 
 timestamps = []
 percents = []
 pools = []
 aquaparks = []
+
+now = datetime.utcnow()
+limit = now - timedelta(hours=24)
 
 if os.path.exists(DATA_FILE):
 
@@ -53,10 +55,12 @@ if os.path.exists(DATA_FILE):
         for row in reader:
             if len(row) >= 4:
                 try:
-                    timestamps.append(datetime.fromisoformat(row[0]))
-                    percents.append(int(row[1]))
-                    pools.append(int(row[2]))
-                    aquaparks.append(int(row[3]))
+                    t = datetime.fromisoformat(row[0])
+                    if t >= limit:
+                        timestamps.append(t)
+                        percents.append(int(row[1]))
+                        pools.append(int(row[2]))
+                        aquaparks.append(int(row[3]))
                 except:
                     continue
 
@@ -64,20 +68,32 @@ if os.path.exists(DATA_FILE):
 
 if len(percents) > 0:
 
-    plt.figure(figsize=(12,6))
+    today_str = now.strftime("%Y-%m-%d")
+    graph_file = f"graf_{today_str}.png"
 
-    plt.plot(timestamps, percents, label="Obsazenost (%)")
-    plt.plot(timestamps, pools, label="Bazén (počet)")
-    plt.plot(timestamps, aquaparks, label="Aquapark (počet)")
+    fig, ax1 = plt.subplots(figsize=(12,6))
 
-    plt.xlabel("Čas")
-    plt.ylabel("Hodnota")
-    plt.title("Vývoj obsazenosti - Aquacentrum Šutka")
-    plt.legend()
+    # levá osa = počty lidí
+    ax1.plot(timestamps, pools, label="Bazén (počet)")
+    ax1.plot(timestamps, aquaparks, label="Aquapark (počet)")
+    ax1.set_xlabel("Čas (UTC)")
+    ax1.set_ylabel("Počet lidí")
 
+    # pravá osa = procenta
+    ax2 = ax1.twinx()
+    ax2.plot(timestamps, percents, linestyle="--", label="Obsazenost (%)")
+    ax2.set_ylabel("Obsazenost (%)")
+
+    # legenda (sloučí obě osy)
+    lines1, labels1 = ax1.get_legend_handles_labels()
+    lines2, labels2 = ax2.get_legend_handles_labels()
+    ax1.legend(lines1 + lines2, labels1 + labels2, loc="upper left")
+
+    plt.title("Obsazenost Šutka – posledních 24h")
     plt.xticks(rotation=45)
     plt.tight_layout()
-    plt.savefig(GRAPH_FILE)
+
+    plt.savefig(graph_file)
     plt.close()
 
-    print("Graf aktualizován")
+    print("Graf aktualizován:", graph_file)
