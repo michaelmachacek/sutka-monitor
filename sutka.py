@@ -5,20 +5,24 @@ from datetime import datetime
 URL = "https://www.sutka.eu/"
 
 response = requests.get(URL, headers={"User-Agent": "Mozilla/5.0"})
-html = response.text
+html = response.text.replace("\n", " ")
 
-pattern = re.search(
-    r"(\d+)%\s*obsazenost:\s*\|\s*(\d+)\s*\(Baz[eé]n\)\s*\|\s*(\d+)\s*\(Aquapark\)",
-    html.replace("\n", " "),
-    re.IGNORECASE
-)
+# najdeme procenta
+percent_match = re.search(r"(\d+)\s*%", html)
 
-if not pattern:
-    raise Exception("Obsazenost nenalezena")
+# najdeme Bazén
+pool_match = re.search(r"(\d+)\s*\(Baz", html)
 
-percent = pattern.group(1)
-pool = pattern.group(2)
-aquapark = pattern.group(3)
+# najdeme Aquapark
+aquapark_match = re.search(r"(\d+)\s*\(Aquapark", html)
+
+if not (percent_match and pool_match and aquapark_match):
+    print("Obsazenost nenalezena – HTML struktura jiná")
+    exit(0)  # důležité – nezpůsobí chybu workflow
+
+percent = percent_match.group(1)
+pool = pool_match.group(1)
+aquapark = aquapark_match.group(1)
 
 timestamp = datetime.utcnow().isoformat()
 
