@@ -43,10 +43,10 @@ percents = []
 if os.path.exists(DATA_FILE):
     with open(DATA_FILE, "r", encoding="utf-8") as f:
         reader = csv.reader(f)
-        for row in reader:
-            if len(row) >= 2:
-                timestamps.append(row[0])
-                percents.append(int(row[1]))
+for row in reader:
+    if len(row) >= 2 and row[1].isdigit():
+        timestamps.append(row[0])
+        percents.append(int(row[1]))
 
 if len(percents) > 0:
     plt.figure()
