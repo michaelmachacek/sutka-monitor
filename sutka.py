@@ -1,5 +1,5 @@
 import matplotlib
-matplotlib.use("Agg")  # důležité pro GitHub CI
+matplotlib.use("Agg")
 
 import requests
 import re
@@ -38,10 +38,12 @@ if pattern:
 else:
     print("Obsazenost nenalezena")
 
-# === 2) Vygenerovat graf ===
+# === 2) Načíst historická data ===
 
 timestamps = []
 percents = []
+pools = []
+aquaparks = []
 
 if os.path.exists(DATA_FILE):
 
@@ -49,19 +51,31 @@ if os.path.exists(DATA_FILE):
         reader = csv.reader(f)
 
         for row in reader:
-            if len(row) >= 2:
+            if len(row) >= 4:
                 try:
+                    timestamps.append(datetime.fromisoformat(row[0]))
                     percents.append(int(row[1]))
-                    timestamps.append(row[0])
+                    pools.append(int(row[2]))
+                    aquaparks.append(int(row[3]))
                 except:
                     continue
 
+# === 3) Vykreslit graf ===
+
 if len(percents) > 0:
-    plt.figure()
-    plt.plot(percents)
-    plt.xlabel("Měření (index)")
-    plt.ylabel("Obsazenost (%)")
-    plt.title("Vývoj obsazenosti - Šutka")
+
+    plt.figure(figsize=(12,6))
+
+    plt.plot(timestamps, percents, label="Obsazenost (%)")
+    plt.plot(timestamps, pools, label="Bazén (počet)")
+    plt.plot(timestamps, aquaparks, label="Aquapark (počet)")
+
+    plt.xlabel("Čas")
+    plt.ylabel("Hodnota")
+    plt.title("Vývoj obsazenosti - Aquacentrum Šutka")
+    plt.legend()
+
+    plt.xticks(rotation=45)
     plt.tight_layout()
     plt.savefig(GRAPH_FILE)
     plt.close()
