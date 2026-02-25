@@ -1,8 +1,8 @@
 name: Sutka Monitor
 
 on:
-  schedule:
-    - cron: "3-59/5 * * * *"
+schedule:
+  - cron: "* * * * *"
   workflow_dispatch:
 
 permissions:
