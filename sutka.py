@@ -94,7 +94,9 @@ if len(percents) > 0:
     lines2, labels2 = ax2.get_legend_handles_labels()
     ax1.legend(lines1 + lines2, labels1 + labels2, loc="upper left")
 
-    plt.title("Obsazenost Šutka – posledních 24 hodin")
+    last_time = timestamps[-1].strftime("%d.%m.%Y %H:%M")
+
+    plt.title(f"Obsazenost Šutka – posledních 24h\nPoslední aktualizace: {last_time}")
     plt.xticks(rotation=45)
     plt.tight_layout()
 
@@ -102,3 +104,5 @@ if len(percents) > 0:
     plt.close()
 
     print("Graf aktualizován:", graph_file)
+last_time = timestamps[-1].strftime("%d.%m.%Y %H:%M")
+
