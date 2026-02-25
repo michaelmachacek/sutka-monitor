@@ -8,18 +8,24 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: sutka-monitor
+  cancel-in-progress: true
+
 jobs:
   run-script:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Install dependencies
         run: pip install requests matplotlib
@@ -27,10 +33,18 @@ jobs:
       - name: Run script
         run: python sutka.py
 
-      - name: Commit updated data
+      - name: Commit updated files
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          git add .
+
+          # stáhnout remote změny (kvůli paralelním běhům / ručním commitům)
+          git pull --rebase origin main
+
+          git add data.csv graf_*.png || true
           git commit -m "Update data and graph" || echo "Nothing to commit"
+
+          # pro jistotu ještě jednou srovnat historii
+          git pull --rebase origin main
+
           git push
